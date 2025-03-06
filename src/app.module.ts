@@ -3,14 +3,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
-import { ConfigProjectModule } from './config-project/config-project.module';
 import { ConfigModule } from '@nestjs/config';
-import * as Joi from 'joi';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'entity/user.model';
 
 @Module({
-  imports: [AuthModule, UserModule, ConfigProjectModule,
+  imports: [
     ConfigModule.forRoot({
       envFilePath: process.env.NODE_ENV == 'dev' ? '.env.dev' : '.env',
       isGlobal: true,
@@ -26,6 +24,8 @@ import { User } from 'entity/user.model';
       synchronize: true,
       logging: true,
     }),
+    AuthModule, 
+    UserModule,
    ],
   controllers: [AppController],
   providers: [AppService],

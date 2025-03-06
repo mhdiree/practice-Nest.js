@@ -1,1 +1,6 @@
-//유저인증 및 토큰발급
+import { Injectable } from "@nestjs/common";
+
+@Injectable()
+export class AuthService {
+    constructor() {}
+}
