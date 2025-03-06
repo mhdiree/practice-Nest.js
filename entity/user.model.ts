@@ -11,6 +11,6 @@ export class User{
     @Column({ type: 'varchar', nullable: false })
     password: string;
 
-    @Column({ type: 'varchar', nullable: false })
+    @Column({ type: 'varchar'})
     name: string;
 }
