@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
-import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'entity/user.model';
+import { AuthController } from './auth/auth.controller';
+import { AuthService } from './auth/auth.service';
+import { UserRepository } from './auth/repository/user.repository';
 
 @Module({
   imports: [
@@ -20,14 +21,12 @@ import { User } from 'entity/user.model';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWD,
       database: process.env.DB_DATABASE,
-      entities: [ User ],
+      entities: [__dirname + "/**/*.entity{.ts,.js}"],
       synchronize: true,
       logging: true,
     }),
-    AuthModule, 
-    UserModule,
    ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, AuthController],
+  providers: [AppService, AuthService, UserRepository ],
 })
 export class AppModule {}
