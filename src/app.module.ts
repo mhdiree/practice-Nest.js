@@ -7,9 +7,16 @@ import { User } from 'entity/user.model';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
 import { UserRepository } from './auth/repository/user.repository';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
+    JwtModule.register({
+      secret: "SECRET",
+      signOptions: {
+        expiresIn: '1h'
+      }
+    }),
     ConfigModule.forRoot({
       envFilePath: process.env.NODE_ENV == 'dev' ? '.env.dev' : '.env',
       isGlobal: true,
