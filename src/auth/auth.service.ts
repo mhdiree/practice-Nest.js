@@ -20,7 +20,7 @@ export class AuthService {
         const { username, password } = userDTO;
         const user = await this.userRepository.findOne({ where: { username }});
     
-        if (user && (await password == user.password )) {
+        if (user && password === user.password ) {
             const payload = { username };
             const accessToken = await this.jwtService.sign(payload);
             return { accessToken };
