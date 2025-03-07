@@ -6,10 +6,12 @@ import { UserRepository } from './repository/user.repository';
 import { AuthController } from './auth.controller';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
+import { AuthService } from './auth.service';
+import { JwtStrategy } from './jwt.strategy';
 
 @Module({
   imports: [
-    PassportModule.register({ defaultStrategy: "jwt "}),
+    PassportModule.register({ defaultStrategy: "jwt"}),
     JwtModule.register({
       secret: "SECRET",
       signOptions: {
@@ -20,11 +22,13 @@ import { JwtModule } from '@nestjs/jwt';
   controllers: [ AuthController ],
   providers: [
     {
-      provide: UserRepository,
+      provide: UserRepository, 
       useFactory: (dataSource: DataSource) => new UserRepository(dataSource),
       inject: [DataSource],
     },
+    AuthService,
+    JwtStrategy,
   ],
-  exports: [UserRepository],
+  exports: [UserRepository, JwtModule, PassportModule],
 })
 export class UserModule {}

@@ -2,7 +2,6 @@ import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UserRepository } from "./repository/user.repository";
 import { UserDTO } from "./dto/user.dto";
-import * as bcrypt from 'bcrypt';
 import { JwtService } from "@nestjs/jwt";
 
 @Injectable()
@@ -26,8 +25,8 @@ export class AuthService {
             const accessToken = await this.jwtService.sign(payload);
             return { accessToken };
         } else {
-            console.log(password);
-            console.log(user?.password);
+            // console.log(password);
+            // console.log(user?.password);
             throw new UnauthorizedException("로그인 실패");
         }
     }
