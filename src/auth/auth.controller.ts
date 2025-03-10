@@ -11,7 +11,7 @@ import {
 import { AuthService } from "./auth.service";
 import { UserDTO } from "./dto/user.dto";
 import { AuthGuard } from "@nestjs/passport";
-import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from "@nestjs/swagger";
 
 @ApiTags("Auth") // Swagger에서 'Auth' 그룹으로 묶음
 @Controller("auth")
@@ -61,6 +61,7 @@ export class AuthController {
 
   @Get("/me")
   @UseGuards(AuthGuard())
+  @ApiBearerAuth()
   @ApiOperation({ summary: "로그인된 사용자 정보 조회" })
   @ApiResponse({ status: 200, description: "로그인된 사용자 정보 반환" })
   @ApiResponse({ status: 401, description: "인증되지 않은 사용자" })
