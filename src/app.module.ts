@@ -12,9 +12,14 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './auth/jwt.strategy';
 import { EventsModule } from './events/events.module';
 import { EventsGateway } from './events/events.gateway';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path'; 
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),  // public 폴더를 루트로 설정
+    }),
     PassportModule.register({ defaultStrategy: "jwt"}),
     JwtModule.register({
       secret: "SECRET",
