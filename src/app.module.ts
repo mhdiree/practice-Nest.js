@@ -10,6 +10,8 @@ import { UserRepository } from './auth/repository/user.repository';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './auth/jwt.strategy';
+import { EventsModule } from './events/events.module';
+import { EventsGateway } from './events/events.gateway';
 
 @Module({
   imports: [
@@ -35,8 +37,9 @@ import { JwtStrategy } from './auth/jwt.strategy';
       synchronize: true,
       logging: true,
     }),
+    EventsModule,
    ],
   controllers: [AppController, AuthController],
-  providers: [AppService, AuthService, UserRepository, JwtStrategy ],
+  providers: [AppService, AuthService, UserRepository, JwtStrategy, EventsGateway ],
 })
 export class AppModule {}
