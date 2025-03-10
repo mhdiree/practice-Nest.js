@@ -34,6 +34,7 @@ export class EventsGateway {
 
       client.join(roomName); // room에 join
 
+
       if(!this.usersInRooms[roomName]){
         this.usersInRooms[roomName] = [];
       }
@@ -63,7 +64,7 @@ export class EventsGateway {
     try {
       const decoded = jwt.verify(token, 'SECRET') as jwt.JwtPayload;
       const roomName = `user-${decoded.username}`;
-
+      console.log(this.usersInRooms[roomName]);
       // 답장
       const replyMessage = `Hello, ${decoded.username}!`;
       this.server.to(roomName).emit('message', replyMessage);

@@ -45,6 +45,6 @@ import { join } from 'path';
     EventsModule,
    ],
   controllers: [AppController, AuthController],
-  providers: [AppService, AuthService, UserRepository, JwtStrategy, EventsGateway ],
+  providers: [AppService, AuthService, UserRepository, JwtStrategy, /*EventsGateway*/ ],
 })
 export class AppModule {}
