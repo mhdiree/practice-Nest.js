@@ -1,75 +1,88 @@
-import { UnauthorizedException } from '@nestjs/common';
-import { SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { UseGuards, UnauthorizedException } from '@nestjs/common';
+import { SubscribeMessage, WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import * as jwt from 'jsonwebtoken';
+import * as jwt from "jsonwebtoken";
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from 'src/auth/repository/user.repository';
-import { EntityNotFoundError } from 'typeorm';
+import { socketGuard } from 'src/auth/guard/socket-token.guard';
 
-@WebSocketGateway()
-export class EventsGateway {
+@WebSocketGateway({ 
+  namespace: "/socket",
+  cors: {
+    origin: 'http://127.0.0.1:5500',  // 클라이언트 주소
+    methods: ['GET', 'POST'], 
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  },
+})  
+export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  private usersInRooms: { [key:string]: string[]} = {};
+  private usersInRooms: { [key: string]: string[] } = {};
 
   constructor(
     @InjectRepository(UserRepository)
     private userRepository: UserRepository
   ) {}
 
-   // WebSocket 연결 시 유저 인증하고 room에 추가
-  async handleConnection(client: Socket) { 
-    // 헤더로 토큰 받아오기
-    const token = client.handshake.headers['authorization']?.split(' ')[1];
-    //console.log("토큰: ", token);
+  // 클라이언트와 연결 후 실행 됨.
+  async handleConnection(client: Socket) {
+    console.log("🔌 New WebSocket connection established");
 
-    if (!token) {
-      throw new UnauthorizedException('토큰 없음');
-    }
-    try{
-      const decoded = jwt.verify(token, 'SECRET') as jwt.JwtPayload;;
-      const user = await this.userRepository.findOneOrFail({ where: { username: decoded.username }})
-      const roomName = `user-${user.username}`; // room 생성
+    // 클라이언트가 인증을 시도할 때
+    client.on('authenticate', async ({ token }) => {
+      try {
+        const decoded = jwt.verify(token, "SECRET") as jwt.JwtPayload;
+        if (!decoded) {
+          throw new UnauthorizedException("유효한 사용자 정보가 없습니다.");
+        }
 
-      client.join(roomName); // room에 join
+        // 사용자 정보 확인 후 룸에 참여
+        const user = await this.userRepository.findOneOrFail({ where: { username: decoded.username } });
+        const roomName = `user-${user.username}`;
 
+        // 클라이언트 데이터에 인증된 사용자 정보 저장
+        client.data.user = decoded;
 
-      if(!this.usersInRooms[roomName]){
-        this.usersInRooms[roomName] = [];
+        // 해당 룸에 클라이언트 연결
+        client.join(roomName);
+
+        // 룸에 클라이언트 ID 추가
+        if (!this.usersInRooms[roomName]) {
+          this.usersInRooms[roomName] = [];
+        }
+        this.usersInRooms[roomName].push(client.id);
+
+        console.log(`✅ ${user.username} authenticated and joined ${roomName}`);
+        client.emit('authenticated', roomName); // 클라이언트에게 authenticated 이벤트
+      } catch (error) {
+        console.error("Authentication failed:", error);
+        client.emit('authentication_failed', "Invalid token");
       }
-      this.usersInRooms[roomName].push(client.id);
-      console.log(`${user.username} connected to ${roomName}`);
-      
-    } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw new UnauthorizedException('사용자가 없음');
-      } else {
-        throw new UnauthorizedException('토큰이 유효하지 않음.');
-      }
+    });
+  }
+
+  // WebSocket 연결 종료 시
+  async handleDisconnect(client: Socket) {
+    const decoded = client.data.user;
+    if (decoded) {
+      const roomName = `user-${decoded.username}`;
+      this.usersInRooms[roomName] = this.usersInRooms[roomName].filter(id => id !== client.id);
+
+      console.log(`❌ ${decoded.username} disconnected from ${roomName}`);
     }
   }
 
+  // 메시지 처리
+  @UseGuards(socketGuard)
   @SubscribeMessage('message')
-  handleMessage(client: Socket, message: string ) {
-    console.log(`Received message: ${message} from ${client.id}`);
+  handleMessage(client: Socket, { message }: { message: string }) {
+    const decoded = client.data.user;
+    const roomName = `user-${decoded.username}`;
 
-    // 클라이언트가 속한 룸을 찾기
-    const token = client.handshake.headers['authorization']?.split(' ')[1];
-    if (!token) {
-      console.log('토큰 없음');
-      return;
-    }
+    console.log(`📩 Received message: ${message} from ${decoded.username}`);
 
-    try {
-      const decoded = jwt.verify(token, 'SECRET') as jwt.JwtPayload;
-      const roomName = `user-${decoded.username}`;
-      console.log(this.usersInRooms[roomName]);
-      // 답장
-      const replyMessage = `Hello, ${decoded.username}!`;
-      this.server.to(roomName).emit('message', replyMessage);
-    }catch (error) {
-      console.log('토큰이 유효하지 않음.');
-    }
+    // 해당 룸으로 메시지 전송
+    this.server.to(roomName).emit('message', { user: decoded.username, message: "hello" });
   }
 }
