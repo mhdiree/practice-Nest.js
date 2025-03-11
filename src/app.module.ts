@@ -14,6 +14,7 @@ import { EventsModule } from './events/events.module';
 import { EventsGateway } from './events/events.gateway';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path'; 
+import { socketGuard } from './auth/guard/socket-token.guard';
 
 @Module({
   imports: [
@@ -45,6 +46,6 @@ import { join } from 'path';
     EventsModule,
    ],
   controllers: [AppController, AuthController],
-  providers: [AppService, AuthService, UserRepository, JwtStrategy, /*EventsGateway*/ ],
+  providers: [AppService, AuthService, UserRepository,],
 })
 export class AppModule {}

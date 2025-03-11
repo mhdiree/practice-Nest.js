@@ -1,0 +1,145 @@
+<!-- 다른 포트에서 열어야 함 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Room Test</title>
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+    <style>
+        /* 채팅 메시지 스타일 */
+        #messages {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        /* 각 메시지 스타일 */
+        .message {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 10px;
+            max-width: 60%;
+            word-wrap: break-word;
+        }
+
+        /* 내가 보낸 메시지 (오른쪽 정렬) */
+        .my-message {
+            background-color: #c2ebcd;
+            color: #000000; /* 텍스트 색상 */
+            margin-left: auto;
+            text-align: right;
+        }
+
+        /* 서버에서 받은 메시지 (왼쪽 정렬) */
+        .other-message {
+            background-color: #d6d6d6;
+            color: #000000; /* 텍스트 색상 */
+            margin-right: auto;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Room Test</h1>
+
+    <!-- 로그인 영역 -->
+    <div id="login-section">
+        <input type="text" id="username" placeholder="Enter username">
+        <input type="password" id="password" placeholder="Enter password">
+        <button onclick="login()">Login</button>
+    </div>
+
+    <!-- 액세스 토큰 입력 및 인증 -->
+    <div id="token-section" style="display: none;">
+        <h3>Enter Access Token:</h3>
+        <input type="text" id="accessTokenInput" placeholder="Paste Access Token">
+        <button onclick="authenticateWithToken()">Authenticate</button>
+    </div>
+
+    <!-- 채팅 영역 -->
+    <div id="chat-section" style="display: none;">
+        <h2>Chat Room</h2>
+        <p>Room: <span id="room-name">Not Joined</span></p>
+        <input type="text" id="message" placeholder="Type a message">
+        <button onclick="sendMessage()">Send</button>
+        <ul id="messages"></ul>
+    </div>
+
+    <script>
+        const socket = io('http://localhost:3000/socket'); // WebSocket 자동 연결
+        let accessToken = null;
+
+        socket.on('connect', () => {
+            console.log('✅ Connected to WebSocket server');
+        });
+
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (!username || !password) {
+                alert('Please enter username and password');
+                return;
+            }
+
+            fetch('http://localhost:3000/auth/signin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.accessToken) {
+                    console.log("🔑 Access Token:", data.accessToken); // 콘솔에 토큰 출력
+                    alert("Access Token이 발급되었습니다.");
+                    document.getElementById("login-section").style.display = "none";
+                    document.getElementById("token-section").style.display = "block";
+                } else {
+                    alert('Login failed!');
+                }
+            })
+            .catch(error => {
+                console.error('Login error:', error);
+                alert('Error logging in');
+            });
+        }
+
+        function authenticateWithToken() {
+            accessToken = document.getElementById("accessTokenInput").value;
+            if (!accessToken) {
+                alert("Access Token을 입력해주세요.");
+                return;
+            }
+            socket.emit('authenticate', { token: accessToken }); //서버로 authenticate이벤트 전송
+        }
+
+        socket.on('authenticated', (roomName) => {
+            document.getElementById('room-name').innerText = roomName;
+            document.getElementById("token-section").style.display = "none";
+            document.getElementById("chat-section").style.display = "block";
+            console.log(`✅ Authenticated and joined room: ${roomName}`);
+        });
+
+        socket.on('message', (data) => {
+            const li = document.createElement('li');
+            li.classList.add('message', 'other-message'); 
+            li.textContent = `${data.user}: ${data.message}`;
+
+            document.getElementById('messages').prepend(li);
+        });
+
+        function sendMessage() {
+            const message = document.getElementById('message').value;
+            if (!message) return;
+
+            socket.emit('message', { message, user: 'me' });  // 'me'는 내가 보낸 메시지로 표시
+
+            const li = document.createElement('li');
+            li.classList.add('message', 'my-message');  // 'my-message'로 스타일 적용 (내 메시지 스타일)
+            li.textContent = `me: ${message}`;  // 내가 보낸 메시지
+            document.getElementById('messages').prepend(li);  // 메시지를 화면에 추가
+
+            document.getElementById('message').value = '';
+        }
+    </script>
+</body>
+</html>
