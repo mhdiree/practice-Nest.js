@@ -13,7 +13,7 @@ import { UserDTO } from "./dto/user.dto";
 import { AuthGuard } from "@nestjs/passport";
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from "@nestjs/swagger";
 
-@ApiTags("Auth") // Swagger에서 'Auth' 그룹으로 묶음
+@ApiTags("Auth")
 @Controller("auth")
 export class AuthController {
   constructor(private authService: AuthService) {}

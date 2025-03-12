@@ -3,18 +3,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from 'entity/user.model';
-import { AuthController } from './auth/auth.controller';
-import { AuthService } from './auth/auth.service';
-import { UserRepository } from './auth/repository/user.repository';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { JwtStrategy } from './auth/jwt.strategy';
 import { EventsModule } from './events/events.module';
-import { EventsGateway } from './events/events.gateway';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path'; 
-import { socketGuard } from './auth/guard/socket-token.guard';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -39,13 +33,14 @@ import { socketGuard } from './auth/guard/socket-token.guard';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWD,
       database: process.env.DB_DATABASE,
-      entities: [__dirname + "/**/*.entity{.ts,.js}"],
+      entities: [join(__dirname, '**', '*.entity.{ts,js}')],
       synchronize: true,
       logging: true,
     }),
     EventsModule,
+    AuthModule,
    ],
-  controllers: [AppController, AuthController],
-  providers: [AppService, AuthService, UserRepository,],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}
