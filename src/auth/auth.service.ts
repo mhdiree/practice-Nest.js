@@ -80,13 +80,10 @@ export class AuthService {
       const user = await this.userRepository.findOneOrFail({
         where: { username },
       });
-      if (!user) {
-        throw new UnauthorizedException();
-      }
       return user;
     } catch (error) {
       console.log(error);
-      throw new UnauthorizedException();
+      throw new UnauthorizedException("사용자가 존재하지 않습니다.");
     }
   }
 
