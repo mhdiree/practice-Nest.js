@@ -7,11 +7,11 @@ import { PassportModule } from '@nestjs/passport';
 
 @Module({
   imports: [
-    PassportModule.register({ defaultStrategy: "jwt"}),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     TypeOrmModule.forFeature([Account]),
   ],
   controllers: [AccountController],
   providers: [AccountService],
-  exports: [AccountService]
+  exports: [AccountService],
 })
 export class AccountModule {}

@@ -6,12 +6,11 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 
-
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.useStaticAssets(join(__dirname, '..', 'static'));
   app.enableCors({
-    origin: "http://127.0.0.1:5500", //소켓 클라이언트 주소
+    origin: 'http://127.0.0.1:5500', //소켓 클라이언트 주소
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
@@ -25,17 +24,19 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
-  const port = configService.get("PORT") || '3000';
+  const port = configService.get<string>('PORT') || '3000';
 
   app.enableCors({
     origin: true,
   });
 
-  app.useGlobalPipes(new ValidationPipe({
-    transform: true,
-    whitelist: true,
-    forbidNonWhitelisted: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
 
   await app.listen(port);
 }

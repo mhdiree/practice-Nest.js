@@ -7,20 +7,20 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { EventsModule } from './events/events.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path'; 
+import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),  // public 폴더를 루트로 설정
+      rootPath: join(__dirname, '..', 'public'), // public 폴더를 루트로 설정
     }),
-    PassportModule.register({ defaultStrategy: "jwt"}),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
-      secret: "SECRET",
+      secret: 'SECRET',
       signOptions: {
-        expiresIn: '1h'
-      }
+        expiresIn: '1h',
+      },
     }),
     ConfigModule.forRoot({
       envFilePath: process.env.NODE_ENV == 'dev' ? '.env.dev' : '.env',
@@ -35,11 +35,11 @@ import { AuthModule } from './auth/auth.module';
       database: process.env.DB_DATABASE,
       entities: [join(__dirname, '**', '*.entity.{ts,js}')],
       synchronize: true,
-      logging: true,
+      logging: false,
     }),
     EventsModule,
     AuthModule,
-   ],
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
