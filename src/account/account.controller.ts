@@ -19,6 +19,8 @@ import {
 import { transferDto } from './dto/transfer.dto';
 import { depositDto } from './dto/deposit.dto';
 import { Response } from 'express';
+import { GetAuth } from 'src/auth/decorator/user.decorator';
+import { User } from 'src/auth/entity/user.entity';
 
 @ApiTags('Account')
 @ApiBearerAuth()
@@ -31,8 +33,8 @@ export class AccountController {
   @ApiOperation({ summary: '잔액 조회' })
   @ApiResponse({ status: 200, description: '잔액 반환' })
   @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
-  async getBalance(@Req() req: Request, @Res() res: Response) {
-    const result = await this.accountService.getBalance(req.user);
+  async getBalance(@GetAuth() user: User, @Res() res: Response) {
+    const result = await this.accountService.getBalance(user);
     return res.status(HttpStatus.OK).json(result);
   }
 
@@ -42,11 +44,11 @@ export class AccountController {
   @ApiResponse({ status: 400, description: '잘못된 요청' })
   @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
   async deposit(
-    @Req() req: Request,
+    @GetAuth() user: User,
     @Body() depositDTO: depositDto,
     @Res() res: Response,
   ) {
-    const result = await this.accountService.deposit(req.user, depositDTO);
+    const result = await this.accountService.deposit(user, depositDTO);
     return res.status(HttpStatus.OK).json(result);
   }
 
@@ -56,11 +58,11 @@ export class AccountController {
   @ApiResponse({ status: 400, description: '잘못된 요청' })
   @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
   async transfer(
-    @Req() req: Request,
+    @GetAuth() user: User,
     @Body() transferDTO: transferDto,
     @Res() res: Response,
   ) {
-    const result = await this.accountService.transfer(req.user, transferDTO);
+    const result = await this.accountService.transfer(user, transferDTO);
     return res.status(HttpStatus.OK).json(result);
   }
 }

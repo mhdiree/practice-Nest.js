@@ -18,6 +18,8 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { Response } from 'express';
+import { GetAuth } from './decorator/user.decorator';
+import { User } from './entity/user.entity';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -48,8 +50,8 @@ export class AuthController {
   @ApiOperation({ summary: '로그인된 사용자 정보 조회' })
   @ApiResponse({ status: 200, description: '로그인된 사용자 정보 반환' })
   @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
-  async getProfile(@Req() req: Request, @Res() res: Response) {
-    const result = await this.authService.getProfile(req.user);
+  async getProfile(@GetAuth() user:User, @Res() res: Response) {
+    const result = await this.authService.getProfile(user);
     return res
       .status(result.success ? HttpStatus.OK : HttpStatus.NOT_FOUND)
       .json(result);
