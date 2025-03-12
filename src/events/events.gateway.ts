@@ -3,8 +3,8 @@ import { SubscribeMessage, WebSocketGateway, WebSocketServer, OnGatewayConnectio
 import { Server, Socket } from 'socket.io';
 import * as jwt from "jsonwebtoken";
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserRepository } from 'src/auth/repository/user.repository';
 import { socketGuard } from 'src/auth/guard/socket-token.guard';
+import { AuthService } from 'src/auth/auth.service';
 
 @WebSocketGateway({ 
   namespace: "/socket",
@@ -21,8 +21,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private usersInRooms: { [key: string]: string[] } = {};
 
   constructor(
-    @InjectRepository(UserRepository)
-    private userRepository: UserRepository
+    private readonly authService : AuthService
   ) {}
 
   // 클라이언트와 연결 후 실행 됨.
@@ -38,7 +37,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
 
         // 사용자 정보 확인 후 룸에 참여
-        const user = await this.userRepository.findOneOrFail({ where: { username: decoded.username } });
+        const user = await this.authService.validateUser(decoded.username);
         const roomName = `user-${user.username}`;
 
         // 클라이언트 데이터에 인증된 사용자 정보 저장
