@@ -1,6 +1,7 @@
+/* eslint-disable */
 import { Injectable, NotFoundException, UnauthorizedException, BadRequestException, InternalServerErrorException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, DataSource } from "typeorm";
+import { Repository, DataSource, QueryRunner } from "typeorm";
 import { Account } from "./entity/account.entity";
 import { depositDto } from "./dto/deposit.dto";
 import { transferDto } from "./dto/transfer.dto";
@@ -15,28 +16,25 @@ export class AccountService {
         private readonly accountRepository: Repository<Account>,
     ) {}
 
-    async createAccount(user: User) { // 계좌 생성
-        const newAccount = await this.accountRepository.create({
-            user,
-            accountId: this.generateAccountId(),
-            balance: 0,
-        })
-        await this.accountRepository.save(newAccount);
-        return { 
-            accountId: newAccount.accountId, 
-            balance: newAccount.balance, 
-            username: user.username 
-        };
-    }
+    async createAccount(user: User, queryRunner: QueryRunner): Promise<Account> {
+        const account = new Account();
+        account.user = user;  // 유저와 연결
+        account.accountId = this.generateAccountId();  // 랜덤 계좌번호 생성
+        account.balance = 0;   // 초기 잔액
+    
+        // 트랜잭션을 통해 계좌 저장
+        return await queryRunner.manager.save(account);
+      }
+    
     private generateAccountId(): string {
         const accountId = Math.floor(10000000 + Math.random() * 90000000).toString(); //랜덤 8자리 계좌번호 생성
         return accountId;
     }
 
-    async getBalance(user: User): Promise<{ balance: number }> { // 잔액조회
+    async getBalance(user: User): Promise<number> { // 잔액조회
         const account = await this.accountRepository.findOne({ where: { id: user.id } });
         if (!account) throw new NotFoundException("계좌가 없습니다.");
-        return { balance: account.balance };
+        return account.balance;
     }
 
     async deposit(user: User, depositDTO: depositDto): Promise<{ balance: number }> { // 입금
@@ -93,6 +91,9 @@ export class AccountService {
 
         } catch (error) {
             await queryRunner.rollbackTransaction(); // 오류나면 롤백
+            if (error instanceof NotFoundException || error instanceof BadRequestException) {
+                throw error; // 사용자 정의 예외를 그대로 던짐
+            }
             throw new InternalServerErrorException("송금 실패");
         } finally {
             await queryRunner.release(); // 트랜잭션 해제
