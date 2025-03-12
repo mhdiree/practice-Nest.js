@@ -31,13 +31,17 @@ export class AccountService {
         return accountId;
     }
 
-    async getBalance(user: User): Promise<number> { // 잔액조회
+    async getBalance(user: User): Promise<{ success: boolean; message: string; balance: number }> { // 잔액조회
         const account = await this.accountRepository.findOne({ where: { id: user.id } });
         if (!account) throw new NotFoundException("계좌가 없습니다.");
-        return account.balance;
+        return  {
+            success: true,
+            message: "잔액 조회 성공",
+            balance: account.balance,
+        };
     }
 
-    async deposit(user: User, depositDTO: depositDto): Promise<{ balance: number }> { // 입금
+    async deposit(user: User, depositDTO: depositDto): Promise<{ success: boolean; message: string; balance: number }> { // 입금
         const { amount } = depositDTO;
         if (amount <= 0) throw new BadRequestException("입금액은 0보다 커야합니다.");
 
@@ -47,7 +51,6 @@ export class AccountService {
 
         try {
             const accountRepository = queryRunner.manager.getRepository(Account);
-
             const account = await accountRepository.findOne( { where: { user: {id: user.id} } });
             if (!account) throw new NotFoundException("계좌가 없습니다.");
 
@@ -55,7 +58,11 @@ export class AccountService {
             await accountRepository.save(account);
             await queryRunner.commitTransaction();
 
-            return { balance: account.balance };
+            return {
+                success: true,
+                message: "입금 성공",
+                balance: account.balance,
+            };
         } catch (error) {
             await queryRunner.rollbackTransaction();
             throw new InternalServerErrorException("입금 실패");
@@ -64,7 +71,7 @@ export class AccountService {
         }
     }
 
-    async transfer(user: User, transferDTO: transferDto): Promise<{ balance: number }> {
+    async transfer(user: User, transferDTO: transferDto): Promise<{ success: boolean; message: string; balance: number }> {
         const { toAccountId, amount } = transferDTO;
         if (amount <= 0) throw new BadRequestException("송금액은 0보다 커야합니다.");
 
@@ -87,12 +94,16 @@ export class AccountService {
             await queryRunner.manager.save(receiverAccount);
             await queryRunner.commitTransaction(); // 완료되면 트랜잭션 커밋
 
-            return { balance: senderAccount.balance };
+            return {
+                success: true,
+                message: "송금 성공",
+                balance: senderAccount.balance,
+            };
 
         } catch (error) {
             await queryRunner.rollbackTransaction(); // 오류나면 롤백
             if (error instanceof NotFoundException || error instanceof BadRequestException) {
-                throw error; // 사용자 정의 예외를 그대로 던짐
+                throw error;
             }
             throw new InternalServerErrorException("송금 실패");
         } finally {

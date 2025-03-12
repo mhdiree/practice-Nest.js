@@ -1,5 +1,4 @@
 import {
-  ConflictException,
   Injectable,
   InternalServerErrorException,
   UnauthorizedException,
@@ -20,8 +19,11 @@ export class AuthService {
     private accountService: AccountService,
   ) {}
 
-  async signUp(userDTO: UserDTO): Promise<void> {
-    return this.createUser(userDTO);
+  async signUp(
+    userDTO: UserDTO,
+  ): Promise<{ success: boolean; message: string }> {
+    await this.createUser(userDTO);
+    return { success: true, message: '회원가입 성공' };
   }
 
   async createUser(userDTO: UserDTO): Promise<void> {
@@ -39,7 +41,6 @@ export class AuthService {
 
     try {
       await queryRunner.manager.save(user);
-
       const account = await this.accountService.createAccount(
         user,
         queryRunner,
@@ -47,20 +48,18 @@ export class AuthService {
       user.account = account;
       await queryRunner.manager.save(user);
       await queryRunner.commitTransaction(); // 트랜잭션 커밋
-    } catch (e) {
+    } catch (error) {
       await queryRunner.rollbackTransaction(); // 트랜잭션 롤백
-      /* eslint-disable */
-      if (e.code === 'ER_DUP_ENTRY') {
-        throw new ConflictException('이미 존재하는 사용자입니다.');
-      } else {
-        throw new InternalServerErrorException();
-      }
+      console.log(error);
+      throw new InternalServerErrorException();
     } finally {
       await queryRunner.release();
     }
   }
 
-  async signIn(userDTO: UserDTO): Promise<{ accessToken: string }> {
+  async signIn(
+    userDTO: UserDTO,
+  ): Promise<{ success: boolean; message: string; accessToken: string }> {
     const { username, password } = userDTO;
     const user = await this.userRepository.findOne({
       where: {
@@ -71,10 +70,9 @@ export class AuthService {
     if (user && password === user.password) {
       const payload = { username };
       const accessToken = this.jwtService.sign(payload);
-      return { accessToken };
-    } else {
-      throw new UnauthorizedException('존재하지 않는 사용자입니다.');
+      return { success: true, message: '로그인 성공', accessToken };
     }
+    throw new UnauthorizedException('존재하지 않는 사용자입니다.');
   }
 
   async validateUser(username: string): Promise<User> {
@@ -82,15 +80,35 @@ export class AuthService {
       const user = await this.userRepository.findOneOrFail({
         where: { username },
       });
-      if (!user) {
-        throw new UnauthorizedException();
-      }
-
       return user;
     } catch (error) {
       console.log(error);
-      throw new UnauthorizedException();
+      throw new UnauthorizedException("사용자가 존재하지 않습니다.");
     }
+  }
+
+  async getProfile(
+    user: User,
+  ): Promise<{ success: boolean; message: string; user?: any }> {
+    if (!user) {
+      throw new UnauthorizedException('인증되지 않은 사용자');
+    }
+
+    const userWithAccount = await this.findOneByIdWithAccount(user.id);
+
+    if (!userWithAccount) {
+      return { success: false, message: '사용자를 찾을 수 없습니다.' };
+    }
+
+    return {
+      success: true,
+      message: '사용자 정보 조회 성공',
+      user: {
+        id: userWithAccount.id,
+        username: userWithAccount.username,
+        accountId: userWithAccount.account?.accountId,
+      },
+    };
   }
 
   async findOneByIdWithAccount(id: number) {
