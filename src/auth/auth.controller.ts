@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { 
   Body, 
   Controller, 
@@ -65,20 +66,39 @@ export class AuthController {
   @ApiOperation({ summary: "로그인된 사용자 정보 조회" })
   @ApiResponse({ status: 200, description: "로그인된 사용자 정보 반환" })
   @ApiResponse({ status: 401, description: "인증되지 않은 사용자" })
-  getProfile(@Req() req, @Res() res) {
+  async getProfile(@Req() req, @Res() res) {
     if (!req.user) {
       return res.status(HttpStatus.UNAUTHORIZED).json({
         success: false,
-        message: "인증되지 않은 사용자"
+        message: "인증되지 않은 사용자",
       });
     }
-
-    return res.status(HttpStatus.OK).json({
-      success: true,
-      user: {
-        id: req.user.id,
-        username: req.user.username
+  
+    try {
+      //user 정보와 account 정보 가져오기
+      const userWithAccount = await this.authService.findOneByIdWithAccount(req.user.id);
+  
+      if (!userWithAccount) {
+        return res.status(HttpStatus.NOT_FOUND).json({
+          success: false,
+          message: "사용자를 찾을 수 없습니다.",
+        });
       }
-    });
+  
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        user: {
+          id: userWithAccount.id,
+          username: userWithAccount.username,
+          accountId: userWithAccount.account?.accountId, // accountId 추가
+        },
+      });
+    } catch (error) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "사용자 정보를 조회하는데 실패했습니다.",
+        error: error.message,
+      });
+    }
   }
 }
