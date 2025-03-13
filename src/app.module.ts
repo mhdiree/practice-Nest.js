@@ -23,7 +23,7 @@ import { AuthModule } from './auth/auth.module';
       },
     }),
     ConfigModule.forRoot({
-      envFilePath: process.env.NODE_ENV == 'dev' ? '.env.dev' : '.env',
+      envFilePath: process.env.NODE_ENV == 'dev' ? '.env.dev' : '.env.local',
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({
@@ -31,7 +31,7 @@ import { AuthModule } from './auth/auth.module';
       host: process.env.DB_HOST,
       port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306,
       username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWD,
+      password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
       entities: [join(__dirname, '**', '*.entity.{ts,js}')],
       synchronize: true,
