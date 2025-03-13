@@ -8,7 +8,6 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import * as jwt from 'jsonwebtoken';
-import { InjectRepository } from '@nestjs/typeorm';
 import { socketGuard } from 'src/auth/guard/socket-token.guard';
 import { AuthService } from 'src/auth/auth.service';
 
