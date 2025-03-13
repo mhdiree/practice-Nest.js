@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   UnauthorizedException,
@@ -22,11 +23,22 @@ export class AuthService {
   async signUp(
     userDTO: UserDTO,
   ): Promise<{ success: boolean; message: string }> {
-    await this.createUser(userDTO);
-    return { success: true, message: '회원가입 성공' };
+    try {
+      await this.createUser(userDTO);
+      return { success: true, message: '회원가입 성공' };
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        return { success: false, message: '이미 존재하는 사용자입니다.' };
+      }
+      throw new InternalServerErrorException('회원가입 중 오류가 발생했습니다.');
+    }
   }
 
   async createUser(userDTO: UserDTO): Promise<void> {
+    const existingUser = await this.userRepository.findOne({ where: { username: userDTO.username } });
+    if (existingUser) {
+      throw new ConflictException();
+    }
     const { username, password } = userDTO;
     const user = new User(); // repository entity 객체 생성
     Object.assign(user, {
