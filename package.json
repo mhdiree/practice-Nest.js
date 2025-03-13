@@ -8,7 +8,7 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
+    "start": "nest start --watch",
     "start:dev": "cross-env NODE_ENV=dev nest start --watch",
     "start:pro": "cross-env NODE_ENV=production nest start --watch",
     "start:debug": "cross-env NODE_ENV=dev nest start --debug --watch",
@@ -71,6 +71,7 @@
     "eslint-plugin-vue": "^10.0.0",
     "globals": "^16.0.0",
     "jest": "^29.7.0",
+    "nodemon": "^3.1.9",
     "prettier": "^3.4.2",
     "sequelize-cli": "^6.6.2",
     "source-map-support": "^0.5.21",
