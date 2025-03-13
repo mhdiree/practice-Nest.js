@@ -16,9 +16,12 @@ services:
   # MySQL 서비스
   db:
     image: mysql:5.7
-    container_name: mysql-db
-    env_file:
-      - .env.dev
+    environment:
+      container_name: mysql-db
+      MYSQL_ROOT_PASSWORD: '0000' # MySQL root 비밀번호
+      MYSQL_USER: 'test' # MySQL 사용자
+      MYSQL_PASSWORD: '0000' # 사용자 비밀번호
+      MYSQL_DATABASE: 'mydatabase' # 기본 데이터베이스 이름
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
