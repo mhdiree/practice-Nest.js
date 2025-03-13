@@ -16,6 +16,8 @@ services:
   # MySQL 서비스
   db:
     image: mysql:5.7
+    ports:
+      - "3306:3306"
     environment:
       container_name: mysql-db
       MYSQL_ROOT_PASSWORD: '0000' # MySQL root 비밀번호
