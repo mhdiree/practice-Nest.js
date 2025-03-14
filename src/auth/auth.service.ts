@@ -10,6 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { FindOptionsWhere, Repository } from 'typeorm';
 import { User } from './entity/user.entity';
 import { AccountService } from 'src/account/account.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -23,27 +24,20 @@ export class AuthService {
   async signUp(
     userDTO: UserDTO,
   ): Promise<{ success: boolean; message: string }> {
-    try {
-      await this.createUser(userDTO);
-      return { success: true, message: '회원가입 성공' };
-    } catch (error) {
-      if (error instanceof ConflictException) {
-        return { success: false, message: '이미 존재하는 사용자입니다.' };
-      }
-      throw new InternalServerErrorException('회원가입 중 오류가 발생했습니다.');
-    }
+    await this.createUser(userDTO);
+    return { success: true, message: '회원가입 성공' };
   }
 
   async createUser(userDTO: UserDTO): Promise<void> {
     const existingUser = await this.userRepository.findOne({ where: { username: userDTO.username } });
     if (existingUser) {
-      throw new ConflictException();
+      throw new ConflictException("존재하는 사용자");
     }
     const { username, password } = userDTO;
     const user = new User(); // repository entity 객체 생성
     Object.assign(user, {
       username,
-      password,
+      password: await bcrypt.hash(password, 10), // 암호화
     });
 
     const queryRunner =
@@ -79,12 +73,13 @@ export class AuthService {
       } as FindOptionsWhere<User>,
     });
 
-    if (user && password === user.password) {
-      const payload = { username };
-      const accessToken = this.jwtService.sign(payload);
-      return { success: true, message: '로그인 성공', accessToken };
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      throw new UnauthorizedException('아이디 또는 비밀번호가 잘못되었습니다.');
     }
-    throw new UnauthorizedException('존재하지 않는 사용자입니다.');
+
+    const payload = { username };
+    const accessToken = this.jwtService.sign(payload);
+    return { success: true, message: '로그인 성공', accessToken };
   }
 
   async validateUser(username: string): Promise<User> {
@@ -107,7 +102,6 @@ export class AuthService {
     }
 
     const userWithAccount = await this.findOneByIdWithAccount(user.id);
-
     if (!userWithAccount) {
       return { success: false, message: '사용자를 찾을 수 없습니다.' };
     }
