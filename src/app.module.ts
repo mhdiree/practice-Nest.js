@@ -23,7 +23,7 @@ import { AuthModule } from './auth/auth.module';
       },
     }),
     ConfigModule.forRoot({
-      envFilePath: process.env.NODE_ENV == 'dev' ? '.env.dev' : '.env.local',
+      envFilePath: process.env.NODE_ENV == 'dev' ? '.dev.env' : '.local.env',
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({

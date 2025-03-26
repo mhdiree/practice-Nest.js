@@ -11,7 +11,7 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.useStaticAssets(join(__dirname, '..', 'static'));
   app.enableCors({
-    origin: ['http://127.0.0.1:5500','http://localhost:5173'],//소켓 클라이언트 주소
+    origin: ['http://127.0.0.1:5500', 'http://localhost:5173'], //소켓 클라이언트 주소
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });

@@ -27,20 +27,20 @@ import { User } from 'src/auth/entity/user.entity';
 @Controller('account')
 @UseGuards(AuthGuard()) // 로그인한 사용자만
 export class AccountController {
-  constructor(private readonly accountService: AccountService) {}
+  constructor(private readonly accountService: AccountService) { }
 
   @Get('/balance')
   @ApiOperation({ summary: '잔액 조회' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: '잔액 반환',
     schema: {
       example: {
-        "success": true,
-        "message": "잔액 조회 성공",
-        "balance": 5000
-      }
-    }
+        success: true,
+        message: '잔액 조회 성공',
+        balance: 5000,
+      },
+    },
   })
   @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
   async getBalance(@GetAuth() user: User, @Res() res: Response) {
@@ -50,16 +50,16 @@ export class AccountController {
 
   @Post('/deposit')
   @ApiOperation({ summary: '입금' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: '입금 성공',
     schema: {
       example: {
-        "success": true,
-        "message": "입금 성공",
-        "balance": 6000
-      }
-    }
+        success: true,
+        message: '입금 성공',
+        balance: 6000,
+      },
+    },
   })
   @ApiResponse({ status: 400, description: '잘못된 요청' })
   @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
@@ -74,16 +74,16 @@ export class AccountController {
 
   @Post('/transfer')
   @ApiOperation({ summary: '송금' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: '송금 성공',
     schema: {
       example: {
-        "success": true,
-        "message": "송금 성공",
-        "balance": 15000
-      }
-    }
+        success: true,
+        message: '송금 성공',
+        balance: 15000,
+      },
+    },
   })
   @ApiResponse({ status: 400, description: '잘못된 요청' })
   @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })

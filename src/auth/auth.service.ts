@@ -29,9 +29,11 @@ export class AuthService {
   }
 
   async createUser(userDTO: UserDTO): Promise<void> {
-    const existingUser = await this.userRepository.findOne({ where: { username: userDTO.username } });
+    const existingUser = await this.userRepository.findOne({
+      where: { username: userDTO.username },
+    });
     if (existingUser) {
-      throw new ConflictException("존재하는 사용자");
+      throw new ConflictException('존재하는 사용자');
     }
     const { username, password } = userDTO;
     const user = new User(); // repository entity 객체 생성
@@ -90,7 +92,7 @@ export class AuthService {
       return user;
     } catch (error) {
       console.log(error);
-      throw new UnauthorizedException("사용자가 존재하지 않습니다.");
+      throw new UnauthorizedException('사용자가 존재하지 않습니다.');
     }
   }
 
