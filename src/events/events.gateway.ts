@@ -25,7 +25,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private usersInRooms: { [key: string]: string[] } = {};
 
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   // 클라이언트와 연결 후 실행 됨.
   async handleConnection(client: Socket) {
