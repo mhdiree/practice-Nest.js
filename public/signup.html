@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>회원가입</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        max-width: 400px;
+        margin: 50px auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 0 10px #eee;
+      }
+      h1 {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: bold;
+      }
+      input {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 16px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+      }
+      button {
+        width: 100%;
+        padding: 12px;
+        background-color: #4caf50;
+        color: white;
+        font-size: 1rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      .message {
+        margin-top: 20px;
+        text-align: center;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>회원가입</h1>
+    <form id="signupForm">
+      <label for="username">아이디</label>
+      <input type="text" id="username" name="username" required />
+
+      <label for="password">비밀번호</label>
+      <input type="password" id="password" name="password" required />
+
+      <button type="submit">회원가입</button>
+    </form>
+
+    <div class="message" id="message"></div>
+
+    <script>
+      const form = document.getElementById('signupForm');
+      const messageDiv = document.getElementById('message');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const userDTO = {
+          username: form.username.value,
+          password: form.password.value,
+        };
+
+        try {
+          const res = await fetch('/auth/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userDTO),
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            form.reset();
+            messageDiv.style.color = 'green';
+            messageDiv.innerHTML = `
+          ✅ <strong>회원가입 성공!</strong><br/><br/>
+          🔐 <strong>JWT 토큰:</strong><br/>
+          <code style="font-size: 0.9em; word-break: break-all;">${data.accessToken}</code><br/><br/>
+          <button id="go-to-login" style="
+            padding: 10px 20px;
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+          ">로그인하러 가기</button>
+        `;
+
+            // 버튼에 이벤트 리스너 추가
+            document
+              .getElementById('go-to-login')
+              .addEventListener('click', () => {
+                window.location.href = '/auth/signin';
+              });
+          } else {
+            messageDiv.style.color = 'red';
+            messageDiv.textContent = data.message || '회원가입 실패';
+          }
+        } catch (err) {
+          messageDiv.style.color = 'red';
+          messageDiv.textContent = '서버 오류가 발생했습니다.';
+        }
+      });
+    </script>
+  </body>
+</html>

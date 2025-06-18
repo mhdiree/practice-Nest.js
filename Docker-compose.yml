@@ -5,7 +5,7 @@ services:
       context: .
     container_name: nestjs-backend
     ports:
-      - "3000:3000"
+      - '3000:3000'
     env_file:
       - .dev.env
     depends_on:
@@ -17,7 +17,7 @@ services:
   db:
     image: mysql:8.0
     ports:
-      - "3306:3306"
+      - '3306:3306'
     environment:
       container_name: mysql-db
       MYSQL_ROOT_PASSWORD: '0000' # MySQL root 비밀번호

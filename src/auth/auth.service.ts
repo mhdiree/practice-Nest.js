@@ -23,9 +23,16 @@ export class AuthService {
 
   async signUp(
     userDTO: UserDTO,
-  ): Promise<{ success: boolean; message: string }> {
+  ): Promise<{ success: boolean; message: string; accessToken: string }> {
     await this.createUser(userDTO);
-    return { success: true, message: '회원가입 성공' };
+
+    const payload = { username: userDTO.username };
+    const accessToken = this.jwtService.sign(payload);
+    return {
+      success: true,
+      message: '회원가입 성공',
+      accessToken,
+    };
   }
 
   async createUser(userDTO: UserDTO): Promise<void> {

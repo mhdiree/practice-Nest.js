@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserDTO } from './dto/user.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -10,6 +10,8 @@ import {
 } from '@nestjs/swagger';
 import { GetAuth } from './decorator/user.decorator';
 import { User } from './entity/user.entity';
+import { Response } from 'express';
+import { join } from 'path';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -41,6 +43,34 @@ export class AuthController {
   })
   async signUp(@Body() userDTO: UserDTO) {
     return await this.authService.signUp(userDTO);
+  }
+
+  @Get('/signup')
+  @ApiOperation({ summary: '회원가입' })
+  @ApiResponse({
+    status: 201,
+    description: '회원가입 성공',
+    schema: {
+      example: {
+        success: true,
+        message: '회원가입 성공',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: '회원가입 실패',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: '유효성 검사 실패',
+        error: 'Bad Request',
+      },
+    },
+  })
+  showsignUp(@Res() res: Response) {
+    const filePath = join(__dirname, '../../public/signup.html');
+    return res.sendFile(filePath);
   }
 
   @Post('/signin')

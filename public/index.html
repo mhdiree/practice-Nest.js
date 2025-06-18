@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Socket.IO Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        max-width: 400px;
+        margin: 50px auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 0 10px #eee;
+        background-color: #fafafa;
+      }
+
+      h2 {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      input,
+      button {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 16px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+      }
+
+      button {
+        background-color: #4caf50;
+        color: white;
+        font-size: 1rem;
+        border: none;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #45a049;
+      }
+
+      #chat-section {
+        display: none;
+        margin-top: 20px;
+      }
+
+      #messages {
+        list-style-type: none;
+        padding: 0;
+        max-height: 300px;
+        overflow-y: auto;
+        margin-bottom: 16px;
+      }
+
+      li {
+        margin: 5px 0;
+        padding: 10px;
+        border-radius: 5px;
+        max-width: 70%;
+      }
+
+      .sent {
+        background-color: #dcf8c6;
+        text-align: right;
+        margin-left: auto;
+      }
+
+      .received {
+        background-color: #f1f0f0;
+        text-align: left;
+        margin-right: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="auth-section">
+      <h2>JWT 토큰 입력</h2>
+      <input id="token-input" placeholder="JWT 토큰을 입력하세요" />
+      <button id="connect-btn">연결하기</button>
+    </div>
+
+    <div id="chat-section">
+      <h2>실시간 채팅</h2>
+      <ul id="messages"></ul>
+      <form id="form">
+        <input
+          id="input"
+          autocomplete="off"
+          placeholder="메시지를 입력하세요..."
+        />
+        <button>전송</button>
+      </form>
+    </div>
+
+    <script>
+      let socket;
+
+      $('#connect-btn').click(function () {
+        const token = $('#token-input').val().trim();
+
+        if (!token) {
+          alert('유효한 JWT 토큰을 입력해주세요.');
+          return;
+        }
+
+        socket = io({
+          extraHeaders: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        socket.on('connect', function () {
+          console.log('Connected to server');
+          $('#auth-section').hide();
+          $('#chat-section').show();
+        });
+
+        socket.on('connect_error', function () {
+          alert('연결 실패! 토큰이 잘못되었거나 서버에 문제가 있습니다.');
+        });
+
+        socket.removeAllListeners('message');
+        socket.on('message', function (msg) {
+          addMessage(msg, 'received');
+        });
+      });
+
+      $('#form').submit(function (e) {
+        e.preventDefault();
+        const message = $('#input').val();
+
+        if (message) {
+          socket.emit('message', message);
+          addMessage(message, 'sent');
+          $('#input').val('');
+        }
+      });
+
+      function addMessage(msg, type) {
+        const li = document.createElement('li');
+        li.textContent = msg;
+        li.className = type;
+        document.getElementById('messages').appendChild(li);
+      }
+    </script>
+  </body>
+</html>
